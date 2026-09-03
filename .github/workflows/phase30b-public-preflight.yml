@@ -1,0 +1,64 @@
+name: WL4 Phase30B Public Preflight
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'validation/PHASE30B_PUBLIC_PROTOCOL.md'
+      - 'validation/phase30b_public_manifest.json'
+      - '.github/workflows/phase30b-public-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify public manifest
+        shell: python
+        run: |
+          import json, math
+          p='validation/phase30b_public_manifest.json'
+          d=json.load(open(p))
+          assert d['phase']=='30B'
+          assert d['private_core_published'] is False
+          assert d['cad']['blob_sha']=='098913499ad7d6c11855b1312ffd1379190ef691'
+          assert d['cad']['aabb_mm']==[16.5,5.0,5.0]
+          assert d['benchmark']['robots']==['panda','ur5','fetch']
+          assert d['benchmark']['scenario']=='bookshelf_tall'
+          assert d['proxy']['deadline_ms']==10.0
+          r=0.5*math.sqrt(16.5**2+5.0**2+5.0**2)/16.5
+          assert 0.543 < r < 0.545
+          print('Phase30B public provenance/preflight PASS')
+          print('bounding_radius_over_longest=', format(r,'.12f'))
+      - name: Verify protocol claim boundaries
+        shell: bash
+        run: |
+          grep -q 'not exact B-Rep/mesh workspace collision checking' validation/PHASE30B_PUBLIC_PROTOCOL.md
+          grep -q 'not physical sensor-to-actuator latency' validation/PHASE30B_PUBLIC_PROTOCOL.md
+          grep -q 'private WL4 implementation is not copied' validation/PHASE30B_PUBLIC_PROTOCOL.md
+          echo 'Claim-boundary checks PASS'
+      - name: Emit public preflight evidence
+        shell: python
+        run: |
+          import json, hashlib, pathlib, math, datetime
+          manifest=pathlib.Path('validation/phase30b_public_manifest.json').read_bytes()
+          protocol=pathlib.Path('validation/PHASE30B_PUBLIC_PROTOCOL.md').read_bytes()
+          out={
+            'phase':'30B-public-preflight',
+            'result':'PASS',
+            'manifest_sha256':hashlib.sha256(manifest).hexdigest(),
+            'protocol_sha256':hashlib.sha256(protocol).hexdigest(),
+            'bounding_radius_over_longest':0.5*math.sqrt(16.5**2+5.0**2+5.0**2)/16.5,
+            'private_core_executed':False,
+            'meaning':'Public provenance and runner verification only; frozen WL4 execution still required.'
+          }
+          pathlib.Path('phase30b-public-preflight-result.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase30b-public-preflight-evidence
+          path: phase30b-public-preflight-result.json
