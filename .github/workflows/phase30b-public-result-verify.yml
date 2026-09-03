@@ -1,0 +1,54 @@
+name: WL4 Phase30B Public Result Verifier
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'results/phase30b/*.json'
+      - 'validation/phase30b_result_schema.json'
+      - '.github/workflows/phase30b-public-result-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-result-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify schema and any disclosed result packages
+        shell: python
+        run: |
+          import json, pathlib, hashlib
+          schema=json.loads(pathlib.Path('validation/phase30b_result_schema.json').read_text())
+          assert schema['schema_version']=='phase30b-result-v1'
+          files=sorted(pathlib.Path('results/phase30b').glob('*.json')) if pathlib.Path('results/phase30b').exists() else []
+          if not files:
+              print('RESULTS_PENDING: verifier contract is valid; no frozen WL4 result package has been disclosed yet.')
+              raise SystemExit(0)
+          seen=set()
+          for p in files:
+              d=json.loads(p.read_text())
+              missing=[k for k in schema['required_top_level'] if k not in d]
+              assert not missing, f'{p}: missing {missing}'
+              robot=d['robot']; assert robot in schema['required_robots']; seen.add(robot)
+              assert d['phase']=='30B'
+              assert d['scenario']=='bookshelf_tall'
+              assert d['cad_source']['blob_sha']==schema['frozen_public_inputs']['cad_blob_sha']
+              assert d['cad_source']['aabb_mm']==schema['frozen_public_inputs']['aabb_mm']
+              assert d['cad_source']['longest_dimension_path_scales']==schema['frozen_public_inputs']['longest_dimension_path_scales']
+              assert int(d['events'])>0
+              assert int(d['failure_categories']['static_invalid'])==0
+              assert int(d['failure_categories']['swept_unsafe'])==0
+              assert 'exceptions' in d['skipped_accounting']
+              assert d['private_core_commit'] and d['private_harness_commit']
+              assert 'max' in d['full_loop_ms']
+              print(p, hashlib.sha256(p.read_bytes()).hexdigest(), 'PASS')
+          if len(files)>=3:
+              assert seen==set(schema['required_robots']), f'incomplete robot set: {seen}'
+      - name: Confirm no private WL4 source is part of verifier
+        shell: bash
+        run: |
+          test ! -e benchmarks/run_wl4_phase30b_cad_proxy.py
+          echo 'No private WL4 benchmark source present in public repository.'
