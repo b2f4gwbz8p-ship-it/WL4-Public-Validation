@@ -1,0 +1,26 @@
+{
+  "phase": "30B",
+  "status": "public-preflight",
+  "private_core_published": false,
+  "cad": {
+    "repository": "cloudgripper/cloudgripper-robot",
+    "path": "Arm/Arm_grip_link2.step",
+    "ref": "master",
+    "blob_sha": "098913499ad7d6c11855b1312ffd1379190ef691",
+    "aabb_mm": [16.5, 5.0, 5.0]
+  },
+  "proxy": {
+    "type": "conservative_joint_space_bounding_sphere",
+    "scale_fractions": [0.02, 0.04],
+    "dynamic_speeds": [0.10, 0.25, 0.50],
+    "horizon": 1.0,
+    "deadline_ms": 10.0
+  },
+  "benchmark": {
+    "robots": ["panda", "ur5", "fetch"],
+    "scenario": "bookshelf_tall",
+    "max_identities_per_robot": 100,
+    "vamp": "0.6.4"
+  },
+  "claim_boundary": "Public preflight/provenance only until frozen private WL4 execution artifacts exist. Not exact B-Rep/mesh collision checking and not physical latency."
+}
