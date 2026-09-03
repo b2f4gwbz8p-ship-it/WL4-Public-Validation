@@ -1,0 +1,40 @@
+{
+  "schema_version": "phase30b-result-v1",
+  "required_top_level": [
+    "phase",
+    "robot",
+    "scenario",
+    "private_core_commit",
+    "private_harness_commit",
+    "cad_source",
+    "events",
+    "success",
+    "success_rate",
+    "deadline_met_full_loop",
+    "failure_categories",
+    "skipped_accounting",
+    "full_loop_ms",
+    "successful_full_loop_ms",
+    "claim_boundary"
+  ],
+  "required_robots": ["panda", "ur5", "fetch"],
+  "frozen_public_inputs": {
+    "scenario": "bookshelf_tall",
+    "cad_blob_sha": "098913499ad7d6c11855b1312ffd1379190ef691",
+    "aabb_mm": [16.5, 5.0, 5.0],
+    "longest_dimension_path_scales": [0.02, 0.04],
+    "dynamic_speeds": [0.10, 0.25, 0.50],
+    "horizon": 1.0,
+    "deadline_ms": 10.0,
+    "vamp": "0.6.4"
+  },
+  "integrity_rules": {
+    "events_must_be_positive": true,
+    "static_invalid_successes_must_equal": 0,
+    "swept_unsafe_successes_must_equal": 0,
+    "exceptions_must_be_reported": true,
+    "deadline_misses_must_not_be_filtered": true,
+    "source_code_must_not_be_in_public_result_package": true
+  },
+  "note": "This schema validates disclosed results and frozen public inputs. It does not itself prove that the private WL4 core executed; the result package must cryptographically bind to the frozen private commit and harness commit."
+}
