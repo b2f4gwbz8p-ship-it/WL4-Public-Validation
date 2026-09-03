@@ -1,0 +1,19 @@
+name: WL4 Public Runner Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/public-runner-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Public runner probe
+        run: |
+          echo 'WL4 public validation runner reached job execution'
+          uname -a
+          date -u
+          echo 'No private WL4 source is present in this repository.'
